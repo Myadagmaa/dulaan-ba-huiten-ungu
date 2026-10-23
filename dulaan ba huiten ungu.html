@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3-р анги: Дулаан ба Хүйтэн Өнгө</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Comfortaa:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Comfortaa', cursive, sans-serif;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 30%, #e0f2fe 70%, #f0f9ff 100%);
+            min-height: 100vh;
+        }
+        .heading-font {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+        .bouncy {
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .bouncy:hover {
+            transform: scale(1.04);
+        }
+        .bouncy:active {
+            transform: scale(0.96);
+        }
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 99;
+        }
+        .badge-glow {
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+        }
+        /* Color Swatch Pulse */
+        .color-card-active {
+            box-shadow: 0 0 0 4px #3b82f6, 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col justify-between min-h-screen">
+
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Header Navigation Bar -->
+    <header class="bg-gradient-to-r from-amber-600 via-orange-500 to-sky-600 text-white shadow-xl sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-amber-600 p-2.5 rounded-2xl shadow-md text-2xl font-black flex items-center space-x-1">
+                    <i class="fa-solid fa-sun text-amber-500"></i>
+                    <i class="fa-solid fa-snowflake text-sky-500"></i>
+                </div>
+                <div>
+                    <h1 class="heading-font text-xl md:text-2xl font-bold tracking-wide">Дулаан ба Хүйтэн Өнгө</h1>
+                    <p class="text-xs text-amber-100">3-р анги: Дүрслэх урлаг / Өнгөний мэдрэмж ба ангилал</p>
+                </div>
+            </div>
+
+            <!-- Stats Header -->
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20" title="Цуглуулсан од">
+                    <i class="fa-solid fa-star text-amber-300 mr-1.5 text-lg"></i>
+                    <span id="globalStars" class="font-bold text-lg">0</span>
+                </div>
+                <div class="flex items-center bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20" title="Цуврал зөв хариулт">
+                    <i class="fa-solid fa-fire text-orange-400 mr-1.5 text-lg"></i>
+                    <span id="streakCount" class="font-bold text-lg">0</span>
+                </div>
+                <button id="soundBtn" onclick="toggleSound()" class="bg-white/20 hover:bg-white/30 p-2 rounded-xl transition text-white">
+                    <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-black/30 backdrop-blur-md border-t border-white/10 px-4">
+            <div class="max-w-6xl mx-auto flex overflow-x-auto space-x-2 py-2">
+                <button onclick="switchTab('learn')" id="tab-learn" class="nav-tab px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 bg-white text-amber-900 shadow-md transition">
+                    <i class="fa-solid fa-palette"></i>
+                    <span>1. Өнгийг Судлах</span>
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="nav-tab px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 text-white hover:bg-white/20 transition">
+                    <i class="fa-solid fa-circle-question"></i>
+                    <span>2. Дулаан уу, Хүйтэн үү?</span>
+                </button>
+                <button onclick="switchTab('sort')" id="tab-sort" class="nav-tab px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 text-white hover:bg-white/20 transition">
+                    <i class="fa-solid fa-box-archive"></i>
+                    <span>3. Сагсанд Ангилах</span>
+                </button>
+                <button onclick="switchTab('achievements')" id="tab-achievements" class="nav-tab px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 text-white hover:bg-white/20 transition">
+                    <i class="fa-solid fa-trophy text-amber-300"></i>
+                    <span>4. Шагнал & Амжилт</span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- TAB 1: LEARN WARM & COOL COLORS -->
+        <section id="sec-learn" class="tab-content block space-y-6">
+            
+            <div class="glass-card rounded-3xl p-6 shadow-xl border-l-8 border-l-amber-500 space-y-3">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <h2 class="heading-font text-2xl font-bold text-slate-800 flex items-center">
+                        <i class="fa-solid fa-paint-brush text-amber-500 mr-3"></i>
+                        Өнгөний сэтгэгдэл: Дулаан ба Хүйтэн өнгө
+                    </h2>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed">
+                    Бид өнгийг харахад янз бүрийн сэтгэгдэл өөр өөрөөр төрдөг. Нар, гал, дулаан агаарыг сануулдаг өнгийг **Дулаан өнгө**, харин ус, мөс, өвөл, сэрүүн агаарыг сануулдаг өнгийг **Хүйтэн өнгө** гэнэ. Өнгө дээр дарж дэлгэрэнгүйг үзээрэй!
+                </p>
+            </div>
+
+            <!-- Warm vs Cool Banner Comparison -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Warm Group Box -->
+                <div class="bg-gradient-to-br from-amber-500 to-red-500 rounded-3xl p-5 text-white shadow-lg space-y-4">
+                    <div class="flex items-center justify-between border-b border-white/20 pb-3">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-sun text-3xl text-amber-200"></i>
+                            <h3 class="heading-font text-2xl font-bold">ДУЛААН ӨНГӨ</h3>
+                        </div>
+                        <span class="bg-white/20 text-xs px-3 py-1 rounded-full font-bold">Нар, Гал, Намар</span>
+                    </div>
+                    <p class="text-xs text-amber-100 leading-relaxed">
+                        Улаан, шар, улбар шар өнгөнүүд нь халуун дулаан, баяр баясгалантай, эрч хүчтэй мэдрэмжийг төрүүлдэг.
+                    </p>
+                    <div class="grid grid-cols-4 gap-2" id="warmSwatchesContainer">
+                        <!-- Injected JS -->
+                    </div>
+                </div>
+
+                <!-- Cool Group Box -->
+                <div class="bg-gradient-to-br from-sky-500 to-indigo-600 rounded-3xl p-5 text-white shadow-lg space-y-4">
+                    <div class="flex items-center justify-between border-b border-white/20 pb-3">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-snowflake text-3xl text-sky-200"></i>
+                            <h3 class="heading-font text-2xl font-bold">ХҮЙТЭН ӨНГӨ</h3>
+                        </div>
+                        <span class="bg-white/20 text-xs px-3 py-1 rounded-full font-bold">Ус, Мөс, Өвөл</span>
+                    </div>
+                    <p class="text-xs text-sky-100 leading-relaxed">
+                        Цэнхэр, хөх, ногоон, хөх ягаан өнгөнүүд нь сэрүүн, тайван, анир чимээгүй мэдрэмжийг төрүүлдэг.
+                    </p>
+                    <div class="grid grid-cols-4 gap-2" id="coolSwatchesContainer">
+                        <!-- Injected JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail Display Area for Selected Color -->
+            <div id="colorDetailCard" class="glass-card rounded-3xl p-6 shadow-xl border-2 border-slate-200 space-y-4">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+
+        <!-- TAB 2: WARM OR COOL QUIZ GAME -->
+        <section id="sec-quiz" class="tab-content hidden space-y-6">
+            <div class="glass-card rounded-3xl p-6 shadow-xl relative">
+                <div class="flex justify-between items-center mb-6 border-b border-slate-200 pb-4">
+                    <div>
+                        <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full uppercase">1-р Дадлага</span>
+                        <h2 class="heading-font text-2xl font-bold text-slate-800 mt-1">Дулаан уу, Хүйтэн үү? Тодорхойлно уу</h2>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-slate-500">Зөв бодсон</div>
+                        <div id="quizScoreDisplay" class="font-bold text-xl text-amber-600">0 / 0</div>
+                    </div>
+                </div>
+
+                <div class="max-w-2xl mx-auto space-y-6">
+                    
+                    <!-- Scenario Card -->
+                    <div id="quizCardBg" class="rounded-3xl p-8 text-center shadow-xl space-y-4 text-white relative transition-all duration-300">
+                        <div id="quizIcon" class="text-6xl my-2 drop-shadow-md">
+                            <i class="fa-solid fa-fire"></i>
+                        </div>
+
+                        <div id="quizTitle" class="heading-font text-3xl font-black text-white drop-shadow-md">
+                            "Шатаж буй Гал"
+                        </div>
+
+                        <div id="quizColorName" class="inline-block bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-bold text-white border border-white/30">
+                            Өнгө: Улаан шар
+                        </div>
+
+                        <p id="quizDesc" class="text-xs text-white/90 italic max-w-md mx-auto">
+                            Гал нь дулаан илч шатаан ялгаруулдаг.
+                        </p>
+                    </div>
+
+                    <!-- Choice Buttons -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="submitQuizChoice('warm')" class="bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white font-black heading-font text-lg py-5 px-4 rounded-2xl shadow-lg bouncy flex flex-col items-center justify-center space-y-1">
+                            <i class="fa-solid fa-sun text-3xl"></i>
+                            <span>ДУЛААН ӨНГӨ</span>
+                        </button>
+
+                        <button onclick="submitQuizChoice('cool')" class="bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-black heading-font text-lg py-5 px-4 rounded-2xl shadow-lg bouncy flex flex-col items-center justify-center space-y-1">
+                            <i class="fa-solid fa-snowflake text-3xl"></i>
+                            <span>ХҮЙТЭН ӨНГӨ</span>
+                        </button>
+                    </div>
+
+                    <!-- Feedback Box -->
+                    <div id="quizFeedback" class="min-h-[50px] flex items-center justify-center font-bold text-sm rounded-2xl p-4 transition"></div>
+
+                    <!-- Next Button -->
+                    <button id="nextQuizBtn" onclick="generateQuizQuestion()" class="hidden w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg bouncy text-base transition">
+                        Дараагийн даалгавар рүү шижих <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+
+                </div>
+            </div>
+        </section>
+
+
+        <!-- TAB 3: BASKET SORTING GAME -->
+        <section id="sec-sort" class="tab-content hidden space-y-6">
+            <div class="glass-card rounded-3xl p-6 shadow-xl relative">
+                <div class="flex justify-between items-center mb-6 border-b border-slate-200 pb-4">
+                    <div>
+                        <span class="bg-sky-100 text-sky-800 text-xs font-bold px-3 py-1 rounded-full uppercase">2-р Дадлага</span>
+                        <h2 class="heading-font text-2xl font-bold text-slate-800 mt-1">Зүйлсийг тохирох сагсанд нь ангилаарай</h2>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-slate-500">Үлдсэн зүйлс</div>
+                        <div id="sortRemainingDisplay" class="font-bold text-xl text-sky-600">0</div>
+                    </div>
+                </div>
+
+                <!-- Sorting Playground -->
+                <div class="space-y-6 max-w-4xl mx-auto">
+                    
+                    <!-- Current Item to Sort -->
+                    <div class="bg-white border-2 border-slate-200 rounded-3xl p-6 text-center shadow-md space-y-3 relative">
+                        <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Ангилах зүйл:</span>
+                        
+                        <div id="sortItemBox" class="flex items-center justify-center space-x-4">
+                            <div id="sortItemIcon" class="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 text-4xl flex items-center justify-center shadow-inner">
+                                <i class="fa-solid fa-lemon"></i>
+                            </div>
+                            <div class="text-left">
+                                <h3 id="sortItemTitle" class="heading-font text-2xl font-bold text-slate-800">Шар Нимбэг</h3>
+                                <p id="sortItemColor" class="text-xs font-bold text-amber-600">Өнгө: Тод Шар</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Baskets (Click targets) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        
+                        <!-- Warm Basket -->
+                        <button onclick="sortCurrentItem('warm')" class="group bg-gradient-to-br from-amber-50 to-orange-100 border-4 border-dashed border-amber-400 hover:border-amber-500 p-6 rounded-3xl text-center space-y-3 bouncy transition shadow-md">
+                            <div class="w-20 h-20 mx-auto rounded-3xl bg-amber-500 text-white text-4xl flex items-center justify-center shadow-lg group-hover:scale-110 transition">
+                                <i class="fa-solid fa-sun"></i>
+                            </div>
+                            <div>
+                                <h4 class="heading-font text-2xl font-bold text-amber-900">Нарны Сагс</h4>
+                                <p class="text-xs text-amber-700 font-semibold">(Дулаан өнгөтэй зүйлс)</p>
+                            </div>
+                            <div id="warmBasketCount" class="text-xs bg-amber-200 text-amber-900 font-bold px-3 py-1 rounded-full inline-block">
+                                Цуглуулсан: 0
+                            </div>
+                        </button>
+
+                        <!-- Cool Basket -->
+                        <button onclick="sortCurrentItem('cool')" class="group bg-gradient-to-br from-sky-50 to-blue-100 border-4 border-dashed border-sky-400 hover:border-sky-500 p-6 rounded-3xl text-center space-y-3 bouncy transition shadow-md">
+                            <div class="w-20 h-20 mx-auto rounded-3xl bg-sky-500 text-white text-4xl flex items-center justify-center shadow-lg group-hover:scale-110 transition">
+                                <i class="fa-solid fa-snowflake"></i>
+                            </div>
+                            <div>
+                                <h4 class="heading-font text-2xl font-bold text-sky-900">Мөсний Сагс</h4>
+                                <p class="text-xs text-sky-700 font-semibold">(Хүйтэн өнгөтэй зүйлс)</p>
+                            </div>
+                            <div id="coolBasketCount" class="text-xs bg-sky-200 text-sky-900 font-bold px-3 py-1 rounded-full inline-block">
+                                Цуглуулсан: 0
+                            </div>
+                        </button>
+
+                    </div>
+
+                    <!-- Sort Feedback -->
+                    <div id="sortFeedback" class="min-h-[50px] flex items-center justify-center font-bold text-sm rounded-2xl p-4 transition"></div>
+
+                    <!-- Reset Sorting Game -->
+                    <div class="text-center pt-2">
+                        <button onclick="resetSortGame()" class="text-xs text-slate-400 hover:text-slate-600 underline">
+                            Ангилах даалгаврыг дахин эхлүүлэх
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <!-- TAB 4: ACHIEVEMENTS & BADGES -->
+        <section id="sec-achievements" class="tab-content hidden space-y-6">
+            <div class="glass-card rounded-3xl p-6 shadow-xl text-center space-y-6">
+                <div>
+                    <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Миний Амжилт</span>
+                    <h2 class="heading-font text-3xl font-black text-slate-800 mt-2">Өнгөний Мастерын Медалиуд</h2>
+                    <p class="text-slate-500 text-sm">Дулаан ба хүйтэн өнгийг ялган таньж цуглуулсан амжилтууд!</p>
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                    <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-center">
+                        <i class="fa-solid fa-star text-amber-400 text-3xl mb-1"></i>
+                        <div id="statStars" class="font-extrabold text-2xl text-amber-950">0</div>
+                        <div class="text-xs text-slate-500">Нийт Од</div>
+                    </div>
+                    <div class="bg-sky-50 border border-sky-200 p-4 rounded-2xl text-center">
+                        <i class="fa-solid fa-circle-check text-sky-500 text-3xl mb-1"></i>
+                        <div id="statCorrect" class="font-extrabold text-2xl text-sky-950">0</div>
+                        <div class="text-xs text-slate-500">Зөв Таасан</div>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 p-4 rounded-2xl text-center">
+                        <i class="fa-solid fa-fire text-orange-500 text-3xl mb-1"></i>
+                        <div id="statStreak" class="font-extrabold text-2xl text-orange-950">0</div>
+                        <div class="text-xs text-slate-500">Дээд Цуврал</div>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl text-center">
+                        <i class="fa-solid fa-award text-emerald-500 text-3xl mb-1"></i>
+                        <div id="statBadgesCount" class="font-extrabold text-2xl text-emerald-950">0 / 5</div>
+                        <div class="text-xs text-slate-500">Нээсэн Медаль</div>
+                    </div>
+                </div>
+
+                <!-- Badges Grid -->
+                <div class="max-w-3xl mx-auto pt-4">
+                    <h3 class="heading-font text-xl font-bold text-slate-800 mb-4 text-left">
+                        <i class="fa-solid fa-shield-halved text-amber-500 mr-2"></i>Амжилтын Тэмдэгтүүд
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="badgesContainer">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-200 flex justify-center">
+                    <button onclick="resetAllProgress()" class="text-xs text-slate-400 hover:text-rose-500 underline">
+                        Амжилтыг шинэчлэх (Дахин эхлэх)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-center py-4 text-xs mt-8">
+        <p>3-р анги: Дүрслэх урлаг хичээл &copy; 2026 - Дулаан ба Хүйтэн өнгөний интерактив хичээл</p>
+    </footer>
+
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* Global State */
+        let state = {
+            stars: 0,
+            streak: 0,
+            maxStreak: 0,
+            correctCount: 0,
+            soundEnabled: true,
+            selectedColorId: "red",
+
+            quiz: {
+                currentQ: null,
+                totalAttempted: 0,
+                totalCorrect: 0
+            },
+
+            sort: {
+                items: [],
+                currentIndex: 0,
+                warmCount: 0,
+                coolCount: 0
+            }
+        };
+
+        // Colors Database (Warm & Cool)
+        const colorsData = [
+            // Warm Colors
+            { id: "red", name: "Улаан өнгө", type: "warm", hex: "#ef4444", icon: "fa-apple-whole", feeling: "Халуун дулаан, баяр баясгалан, эрч хүч", ex: "Шатаж буй гал, улаан алим, аньс ба гүзээлзгэнэ" },
+            { id: "orange", name: "Улбар шар өнгө", type: "warm", hex: "#f97316", icon: "fa-carrot", feeling: "Дулаан, цоглог, нөхөрсөг", ex: "Мандарин, лууван, намрын унасан навчис, наран жаргах агшин" },
+            { id: "yellow", name: "Шар өнгө", type: "warm", hex: "#eab308", icon: "fa-sun", feeling: "Гэгээлэг, дулаахан, нарлаг", ex: "Нарны гэрэл, наранцэцэг, шар нимбэг, эрдэнэшиш" },
+            { id: "red-pink", name: "Улаан ягаан өнгө", type: "warm", hex: "#f43f5e", icon: "fa-heart", feeling: "Янаг дулаан, хөгжилтэй, өнгөлөг", ex: "Шийгуаны зөөлөн эд, ягаан цэцэг, интоор" },
+
+            // Cool Colors
+            { id: "blue", name: "Цэнхэр / Хөх өнгө", type: "cool", hex: "#3b82f6", icon: "fa-water", feeling: "Анир чимээгүй, сэрүүн, уудам", ex: "Тэнгэр, далайн ус, цэнгэг нуур, мөс" },
+            { id: "cyan", name: "Цэнхэр ногоон өнгө", type: "cool", hex: "#06b6d4", icon: "fa-snowflake", feeling: "Цэвэр агаар, хүйтэн мөс, сэнгэнэсэн", ex: "Мөсөн уул, туйл, өвөл, хүйтэн ус" },
+            { id: "green", name: "Ногоон өнгө", type: "cool", hex: "#10b981", icon: "fa-tree", feeling: "Сэрүүн, байгаль, тайван", ex: "Модны навч, ногоон зүлэг, шинэхэн өвс, гацуур" },
+            { id: "purple", name: "Хөх ягаан өнгө", type: "cool", hex: "#8b5cf6", icon: "fa-moon", feeling: "Нууцлаг, шөнө, намуухан", ex: "Шөнийн тэнгэр, үзмэн жимс, нил цэцэг" }
+        ];
+
+        // Quiz Questions Database
+        const quizDatabase = [
+            { title: "Шатаж буй дөл", colorName: "Улаан шар", type: "warm", icon: "fa-fire", bg: "from-amber-600 to-red-600", desc: "Гал нь халуун дулаан илчийг ялгаруулдаг." },
+            { title: "Цас ба Мөс", colorName: "Цэнхэр цагаан", type: "cool", icon: "fa-snowflake", bg: "from-sky-500 to-blue-700", desc: "Өвөл цас мөс орж сэрүүн хүйтэн агаар авчирдаг." },
+            { title: "Мандаж буй Нар", colorName: "Шар", type: "warm", icon: "fa-sun", bg: "from-amber-400 to-orange-500", desc: "Нар дэлхийг бүхэлд нь дулаацуулдаг." },
+            { title: "Гүн далайн ус", colorName: "Хөх", type: "cool", icon: "fa-water", bg: "from-blue-600 to-indigo-800", desc: "Далайн гүн ус сэрүүн хүйтэн байдаг." },
+            { title: "Намрын шар навч", colorName: "Улбар шар", type: "warm", icon: "fa-leaf", bg: "from-orange-500 to-amber-600", desc: "Намар модны навч шарлаж улбар шар өнгөтэй болдог." },
+            { title: "Шөнийн одон агаар", colorName: "Хөх ягаан", type: "cool", icon: "fa-moon", bg: "from-indigo-700 to-purple-900", desc: "Шөнө нар жаргаж агаар сэрүүсдэг." },
+            { title: "Боловсорсон улаан алим", colorName: "Улаан", type: "warm", icon: "fa-apple-whole", bg: "from-red-500 to-rose-600", desc: "Зун, намартай холбоотой тод өнгө." },
+            { title: "Ногоон ой мод", colorName: "Ногоон", type: "cool", icon: "fa-tree", bg: "from-emerald-600 to-teal-800", desc: "Ногоон өнгө нь байгалийн сэрүүн сайхныг сануулдаг." }
+        ];
+
+        // Sorting Game Database Items
+        const initialSortItems = [
+            { title: "Шар Нимбэг", colorName: "Тод Шар", type: "warm", icon: "fa-lemon", colorClass: "text-amber-500" },
+            { title: "Мөсөн уул", colorName: "Цэнхэр", type: "cool", icon: "fa-icicles", colorClass: "text-sky-500" },
+            { title: "Шатаж буй гал", colorName: "Улаан", type: "warm", icon: "fa-fire-flame-curved", colorClass: "text-red-500" },
+            { title: "Далайн ус", colorName: "Хөх", type: "cool", icon: "fa-water", colorClass: "text-blue-600" },
+            { title: "Лууван", colorName: "Улбар Шар", type: "warm", icon: "fa-carrot", colorClass: "text-orange-500" },
+            { title: "Өвөл ба Цас", colorName: "Цэнхэр цагаан", type: "cool", icon: "fa-snowflake", colorClass: "text-cyan-500" },
+            { title: "Нарны гэрэл", colorName: "Тод шар", type: "warm", icon: "fa-sun", colorClass: "text-amber-400" },
+            { title: "Шөнийн тэнгэр", colorName: "Хөх ягаан", type: "cool", icon: "fa-moon", colorClass: "text-indigo-600" }
+        ];
+
+        // Badges Definition
+        const badgesDef = [
+            { id: "b1", title: "Өнгө Шинжээч", desc: "Дуلاан ба хүйтэн өнгийг анхлан судаллаа", icon: "fa-palette", req: s => s.correctCount >= 1 },
+            { id: "b2", title: "Нар ба Мөсний Баатар", desc: "5 удаа асуултад зөв хариуллаа", icon: "fa-sun", req: s => s.correctCount >= 5 },
+            { id: "b3", title: "Өнгөний Детектив", desc: "3 удаа дараалан алдалгүй таалаа", icon: "fa-fire", req: s => s.maxStreak >= 3 },
+            { id: "b4", title: "Сагс Дүүргэгч", desc: "10-аас дээш удаа зөв таавар таалаа", icon: "fa-box-archive", req: s => s.correctCount >= 10 },
+            { id: "b5", title: "Уран Зураач", desc: "Нийт 50-иас дээш Од цуглууллаа", icon: "fa-trophy", req: s => s.stars >= 50 }
+        ];
+
+        /* Web Audio API Sound Synthesizer */
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!state.soundEnabled) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(520, now);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'wrong') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, now); // A3
+                    osc.frequency.exponentialRampToValueAtTime(160, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            icon.className = state.soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+        }
+
+        /* Navigation Tab Switcher */
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-amber-900', 'shadow-md');
+                btn.classList.add('text-white', 'hover:bg-white/20');
+            });
+
+            document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.add('bg-white', 'text-amber-900', 'shadow-md');
+            activeBtn.classList.remove('text-white', 'hover:bg-white/20');
+
+            if (tabId === 'quiz' && state.quiz.totalAttempted === 0) {
+                generateQuizQuestion();
+            } else if (tabId === 'sort' && state.sort.items.length === 0) {
+                resetSortGame();
+            } else if (tabId === 'achievements') {
+                renderAchievements();
+            }
+        }
+
+
+        /* MODULE 1: EXPLORE WARM & COOL COLORS */
+        function renderExplorationModule() {
+            const warmContainer = document.getElementById('warmSwatchesContainer');
+            const coolContainer = document.getElementById('coolSwatchesContainer');
+            warmContainer.innerHTML = '';
+            coolContainer.innerHTML = '';
+
+            colorsData.forEach(item => {
+                const btn = document.createElement('button');
+                const isSelected = item.id === state.selectedColorId;
+
+                btn.className = `p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 transition bouncy border-2 ${
+                    isSelected ? 'border-white scale-105 shadow-lg ring-4 ring-white/50' : 'border-transparent opacity-90 hover:opacity-100'
+                }`;
+                btn.style.backgroundColor = item.hex;
+
+                btn.onclick = () => {
+                    playSound('click');
+                    state.selectedColorId = item.id;
+                    renderExplorationModule();
+                };
+
+                btn.innerHTML = `
+                    <i class="fa-solid ${item.icon} text-white text-lg drop-shadow"></i>
+                    <span class="text-[10px] text-white font-bold tracking-tight drop-shadow">${item.name.split(' ')[0]}</span>
+                `;
+
+                if (item.type === 'warm') warmContainer.appendChild(btn);
+                else coolContainer.appendChild(btn);
+            });
+
+            // Display Detail Box for Selected Color
+            const selected = colorsData.find(c => c.id === state.selectedColorId);
+            const detailBox = document.getElementById('colorDetailCard');
+
+            const isWarm = selected.type === 'warm';
+            const badgeBg = isWarm ? 'bg-amber-100 text-amber-900' : 'bg-sky-100 text-sky-900';
+            const typeLabel = isWarm ? 'ДУЛААН ӨНГӨ (Нар, гал)' : 'ХҮЙТЭН ӨНГӨ (Ус, мөс)';
+
+            detailBox.innerHTML = `
+                <div class="flex items-center space-x-4 border-b border-slate-200 pb-4">
+                    <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl shadow-md shrink-0" style="background-color: ${selected.hex}">
+                        <i class="fa-solid ${selected.icon}"></i>
+                    </div>
+                    <div>
+                        <div class="inline-block text-xs font-bold px-3 py-1 rounded-full ${badgeBg} mb-1">
+                            ${typeLabel}
+                        </div>
+                        <h3 class="heading-font text-2xl font-bold text-slate-800">${selected.name}</h3>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1">
+                        <div class="text-xs text-slate-400 font-bold uppercase">Төрүүлэх мэдрэмж / Сэтгэгдэл:</div>
+                        <div class="font-bold text-slate-800 text-sm flex items-center">
+                            <i class="fa-solid fa-heart-pulse text-amber-500 mr-2"></i> ${selected.feeling}
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1">
+                        <div class="text-xs text-slate-400 font-bold uppercase">Бодит амьдрал дээрх жишээ:</div>
+                        <div class="font-bold text-slate-800 text-sm flex items-center">
+                            <i class="fa-solid fa-image text-sky-500 mr-2"></i> ${selected.ex}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        /* MODULE 2: QUIZ GAME */
+        function generateQuizQuestion() {
+            document.getElementById('nextQuizBtn').classList.add('hidden');
+            const fb = document.getElementById('quizFeedback');
+            fb.className = 'min-h-[50px] flex items-center justify-center font-bold text-sm rounded-2xl p-4 transition';
+            fb.innerHTML = '';
+
+            const randomIdx = Math.floor(Math.random() * quizDatabase.length);
+            const q = quizDatabase[randomIdx];
+            state.quiz.currentQ = q;
+
+            const cardBg = document.getElementById('quizCardBg');
+            cardBg.className = `rounded-3xl p-8 text-center shadow-xl space-y-4 text-white relative transition-all duration-300 bg-gradient-to-br ${q.bg}`;
+
+            document.getElementById('quizIcon').innerHTML = `<i class="fa-solid ${q.icon}"></i>`;
+            document.getElementById('quizTitle').textContent = `"${q.title}"`;
+            document.getElementById('quizColorName').textContent = `Өнгө: ${q.colorName}`;
+            document.getElementById('quizDesc').textContent = q.desc;
+        }
+
+        function submitQuizChoice(chosenType) {
+            if (!state.quiz.currentQ) return;
+
+            state.quiz.totalAttempted++;
+            const correctType = state.quiz.currentQ.type;
+            const isCorrect = chosenType === correctType;
+            const fb = document.getElementById('quizFeedback');
+
+            if (isCorrect) {
+                playSound('correct');
+                state.quiz.totalCorrect++;
+                state.stars += 10;
+                state.streak++;
+                state.correctCount++;
+                if (state.streak > state.maxStreak) state.maxStreak = state.streak;
+
+                const label = correctType === 'warm' ? 'ДУЛААН ӨНГӨ' : 'ХҮЙТЭН ӨНГӨ';
+                fb.className = "bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-2xl p-4 text-center font-bold";
+                fb.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mr-2 text-lg"></i> МАШ САЙН! Энэ бол <b>"${label}"</b> мөн. (+10 Од)`;
+            } else {
+                playSound('wrong');
+                state.streak = 0;
+                const label = correctType === 'warm' ? 'ДУЛААН ӨНГӨ' : 'ХҮЙТЭН ӨНГӨ';
+                fb.className = "bg-rose-100 text-rose-900 border border-rose-300 rounded-2xl p-4 text-center font-bold";
+                fb.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 mr-2 text-lg"></i> Дөхлөө! Зөв хариу нь <b>"${label}"</b> байлаа. Дахин сайн ажиглаарай!`;
+            }
+
+            state.quiz.currentQ = null; // Lock further clicks
+            updateGlobalStats();
+            document.getElementById('nextQuizBtn').classList.remove('hidden');
+        }
+
+
+        /* MODULE 3: BASKET SORTING GAME */
+        function resetSortGame() {
+            // Shuffle items
+            state.sort.items = [...initialSortItems].sort(() => Math.random() - 0.5);
+            state.sort.currentIndex = 0;
+            state.sort.warmCount = 0;
+            state.sort.coolCount = 0;
+
+            document.getElementById('warmBasketCount').textContent = `Цуглуулсан: 0`;
+            document.getElementById('coolBasketCount').textContent = `Цуглуулсан: 0`;
+
+            renderSortItem();
+        }
+
+        function renderSortItem() {
+            const fb = document.getElementById('sortFeedback');
+            fb.className = 'min-h-[50px] flex items-center justify-center font-bold text-sm rounded-2xl p-4 transition';
+            fb.innerHTML = '';
+
+            const remaining = state.sort.items.length - state.sort.currentIndex;
+            document.getElementById('sortRemainingDisplay').textContent = remaining;
+
+            if (remaining <= 0) {
+                // Game Finished!
+                triggerConfetti();
+                playSound('correct');
+                document.getElementById('sortItemBox').innerHTML = `
+                    <div class="text-center py-4 space-y-2">
+                        <i class="fa-solid fa-trophy text-amber-500 text-5xl"></i>
+                        <h3 class="heading-font text-2xl font-black text-slate-800">БҮХ ЗҮЙЛИЙГ ЗӨВ АНГИЛЛАА!</h3>
+                        <p class="text-xs text-slate-500">Баяр хүргэе, та Дулаан ба Хүйтэн өнгийг маш сайн ялгаж чадлаа!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const item = state.sort.items[state.sort.currentIndex];
+            document.getElementById('sortItemIcon').className = `w-16 h-16 rounded-2xl bg-slate-100 text-4xl flex items-center justify-center shadow-inner ${item.colorClass}`;
+            document.getElementById('sortItemIcon').innerHTML = `<i class="fa-solid ${item.icon}"></i>`;
+            document.getElementById('sortItemTitle').textContent = item.title;
+            document.getElementById('sortItemColor').textContent = `Өнгө: ${item.colorName}`;
+        }
+
+        function sortCurrentItem(chosenType) {
+            const remaining = state.sort.items.length - state.sort.currentIndex;
+            if (remaining <= 0) return;
+
+            const current = state.sort.items[state.sort.currentIndex];
+            const isCorrect = chosenType === current.type;
+            const fb = document.getElementById('sortFeedback');
+
+            if (isCorrect) {
+                playSound('correct');
+                state.stars += 10;
+                state.streak++;
+                state.correctCount++;
+                if (state.streak > state.maxStreak) state.maxStreak = state.streak;
+
+                if (chosenType === 'warm') state.sort.warmCount++;
+                else state.sort.coolCount++;
+
+                document.getElementById('warmBasketCount').textContent = `Цуглуулсан: ${state.sort.warmCount}`;
+                document.getElementById('coolBasketCount').textContent = `Цуглуулсан: ${state.sort.coolCount}`;
+
+                fb.className = "bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-2xl p-3 text-center font-bold text-xs";
+                fb.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> ЗӨВ! "${current.title}" сагсанд амжилттай орлоо. (+10 Од)`;
+            } else {
+                playSound('wrong');
+                state.streak = 0;
+                const basketName = current.type === 'warm' ? 'Нарны Сагс (Дулаан)' : 'Мөсний Сагс (Хүйтэн)';
+                fb.className = "bg-rose-100 text-rose-900 border border-rose-300 rounded-2xl p-3 text-center font-bold text-xs";
+                fb.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 mr-1"></i> Буруу сагс! "${current.title}" нь <b>${basketName}</b>-нд орох ёстой байлаа.`;
+            }
+
+            state.sort.currentIndex++;
+            updateGlobalStats();
+
+            setTimeout(() => {
+                renderSortItem();
+            }, 1200);
+        }
+
+
+        /* GLOBAL STATS & ACHIEVEMENTS */
+        function updateGlobalStats() {
+            document.getElementById('globalStars').textContent = state.stars;
+            document.getElementById('streakCount').textContent = state.streak;
+            document.getElementById('quizScoreDisplay').textContent = `${state.quiz.totalCorrect} / ${state.quiz.totalAttempted}`;
+        }
+
+        function renderAchievements() {
+            document.getElementById('statStars').textContent = state.stars;
+            document.getElementById('statCorrect').textContent = state.correctCount;
+            document.getElementById('statStreak').textContent = state.maxStreak;
+
+            let unlockedCount = 0;
+            const container = document.getElementById('badgesContainer');
+            container.innerHTML = '';
+
+            badgesDef.forEach(b => {
+                const unlocked = b.req(state);
+                if (unlocked) unlockedCount++;
+
+                const badgeCard = document.createElement('div');
+                
+                if (unlocked) {
+                    badgeCard.className = 'bg-white border-2 border-amber-300 rounded-2xl p-4 flex items-center space-x-3 shadow-md relative overflow-hidden badge-glow';
+                    badgeCard.innerHTML = `
+                        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl font-black shrink-0">
+                            <i class="fa-solid ${b.icon}"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="font-extrabold text-slate-800 text-sm">${b.title}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">${b.desc}</div>
+                            <span class="inline-block mt-1 text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Авсан <i class="fa-solid fa-check"></i></span>
+                        </div>
+                    `;
+                } else {
+                    badgeCard.className = 'bg-slate-100 border-2 border-slate-200 rounded-2xl p-4 flex items-center space-x-3 opacity-60 grayscale';
+                    badgeCard.innerHTML = `
+                        <div class="w-12 h-12 rounded-2xl bg-slate-200 text-slate-500 flex items-center justify-center text-2xl font-black shrink-0">
+                            <i class="fa-solid ${b.icon}"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="font-bold text-slate-700 text-sm">${b.title}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">${b.desc}</div>
+                            <span class="inline-block mt-1 text-[10px] bg-slate-200 text-slate-600 font-bold px-2 py-0.5 rounded-full">Түгжээтэй</span>
+                        </div>
+                    `;
+                }
+                container.appendChild(badgeCard);
+            });
+
+            document.getElementById('statBadgesCount').textContent = `${unlockedCount} / ${badgesDef.length}`;
+        }
+
+        function resetAllProgress() {
+            state.stars = 0;
+            state.streak = 0;
+            state.maxStreak = 0;
+            state.correctCount = 0;
+            state.quiz.totalAttempted = 0;
+            state.quiz.totalCorrect = 0;
+
+            updateGlobalStats();
+            renderAchievements();
+            resetSortGame();
+        }
+
+        /* CONFETTI SYSTEM */
+        function triggerConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#ef4444', '#f97316', '#eab308', '#3b82f6', '#06b6d4', '#10b981'];
+
+            for (let i = 0; i < 80; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: (Math.random() - 0.7) * 14,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 90
+                });
+            }
+
+            let animId;
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+
+                particles.forEach(p => {
+                    if (p.life > 0) {
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.25;
+                        p.life--;
+
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                if (alive) {
+                    animId = requestAnimationFrame(render);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    cancelAnimationFrame(animId);
+                }
+            }
+            render();
+        }
+
+        /* INITIALIZATION */
+        window.onload = function() {
+            renderExplorationModule();
+            updateGlobalStats();
+        };
+    </script>
+</body>
+</html>
